@@ -128,6 +128,14 @@ tourSchema.virtual('reviews', {
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ startLocation: '2dsphere' });
 
+tourSchema.pre(/^find/, function (next) {
+	this.populate({
+		path: 'guides',
+		select: '-__v -lastPasswordUpdate',
+	});
+	next();
+});
+
 // A palavra THIS se refere à query sendo montada
 // tourSchema.pre(/^find/, function (next) {
 // 	this.start = Date.now();

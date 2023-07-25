@@ -81,6 +81,14 @@ reviewSchema.post('findById', async function () {
 	await this.r.constructor.calcAverageRatings(this.r.tour);
 });
 
+reviewSchema.pre(/^find/, function (next) {
+	this.populate({
+		path: 'user',
+		select: 'name photo',
+	});
+	next();
+});
+
 const Review = mongoose.model('Review', reviewSchema);
 
 module.exports = Review;

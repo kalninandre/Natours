@@ -78,20 +78,42 @@ exports.login = async function (req, res, next) {
 		next(error);
 	}
 };
+
+exports.logout = async function (req, res, next) {
+	try {
+		res.cookie('natours-jwt', null);
+
+		res.status(200).json({
+			status_code: 200,
+			data: {
+				message: 'Deslogado com sucesso',
+			},
+		});
+	} catch (error) {
+		next(error);
+	}
+};
 // #endregion
 
 // #region Middlewares - Autenticação e Autorização
 exports.authenticate = async function (req, res, next) {
 	try {
-		if (!req.headers || !req.headers.authorization) {
-			throw new AppError('Usuário não está logado', 401);
+		let response_token;
+
+		if (req.cookies) {
+			response_token = req.cookies['natours-jwt'];
+		} else {
+			if (!req.headers || !req.headers.authorization) {
+				throw new AppError('Usuário não está logado', 401);
+			}
+
+			if (!req.headers.authorization.startsWith('Bearer')) {
+				throw new AppError('Autorização inválida', 401);
+			}
+
+			response_token = req.headers.authorization.split(' ')[1];
 		}
 
-		if (!req.headers.authorization.startsWith('Bearer')) {
-			throw new AppError('Autorização inválida', 401);
-		}
-
-		const response_token = req.headers.authorization.split(' ')[1];
 		if (response_token == 'null') {
 			throw new AppError('Token não encontrado', 401);
 		}
@@ -112,6 +134,7 @@ exports.authenticate = async function (req, res, next) {
 			throw new AppError('A senha foi alterada durante a sessão', 401);
 		}
 
+		res.locals.user = user;
 		req.user = user;
 
 		next();

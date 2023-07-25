@@ -4,12 +4,15 @@ const limit_request_rate = require('express-rate-limit');
 const helmet = require('helmet');
 const mongo_sanitize = require('express-mongo-sanitize');
 const xss_clean = require('xss-clean');
+const path = require('path');
+const cookie_parser = require('cookie-parser');
 
 // Clases
 const AppError = require('./utils/app-error.js');
 const { CheckNonOperationalError } = require('./controllers/error.controller');
 
 // Rotas
+const view_router = require('./routers/view.router');
 const auth_router = require('./routers/auth.router');
 const user_router = require('./routers/user.router');
 const tour_router = require('./routers/tour.router');
@@ -17,11 +20,15 @@ const review_router = require('./routers/review.router');
 
 const app = express();
 
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.json({ limit: '10kb' }));
-app.use(express.static(`${__dirname}/public`));
+app.use(cookie_parser());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Coloca Headers que validam XSS e CRF
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // Valida para não passar umas query de banco de dados no Mongo DB
 app.use(mongo_sanitize());
@@ -35,6 +42,14 @@ if (process.env.ENV == 'DEV') {
 	app.use(morgan('dev'));
 }
 
+// Mostra os Cookies do site
+// if (process.env.ENV == 'DEV') {
+// 	app.use((req, res, next) => {
+// 		console.log(req.cookies);
+// 		next();
+// 	});
+// }
+
 const api_limiter = limit_request_rate({
 	max: 100,
 	windowMs: 60 * 60 * 1000,
@@ -44,6 +59,7 @@ const api_limiter = limit_request_rate({
 });
 app.use('/api', api_limiter);
 
+app.use('/', view_router);
 app.use('/api/auth', auth_router);
 app.use('/api/user', user_router);
 app.use('/api/tour', tour_router);
@@ -57,35 +73,44 @@ app.use('*', (req, res, next) => {
 // Global error handler
 app.use((error, req, res, next) => {
 	error.statusCode = error.statusCode || 500;
-	if (process.env.ENV == 'DEV') {
-		// console.error(error.stack); // Mostro onde foi o erro
 
-		// Envio o erro como um todo
-		res.status(error.statusCode).json({
-			status: 'error',
-			message: error.message,
-			error: error,
-		});
-	} else if (process.env.ENV == 'PROD') {
-		// console.error(error.stack); // Mostro onde foi o erro
+	if (req.originalUrl.includes('api')) {
+		if (process.env.ENV == 'DEV') {
+			// console.error(error.stack); // Mostro onde foi o erro
 
-		// Caso seja um erro advindo do AppError, mostro para o usuário, pois sei o que aconteceu (é operacional)
-		if (error.isOperational) {
+			// Envio o erro como um todo
 			res.status(error.statusCode).json({
 				status: 'error',
 				message: error.message,
+				error: error,
 			});
-		} else {
-			const error_handler = CheckNonOperationalError(error, req, res);
+		} else if (process.env.ENV == 'PROD') {
+			// console.error(error.stack); // Mostro onde foi o erro
 
-			if (!error_handler) {
+			// Caso seja um erro advindo do AppError, mostro para o usuário, pois sei o que aconteceu (é operacional)
+			if (error.isOperational) {
 				res.status(error.statusCode).json({
 					status: 'error',
-					message: 'Something bad happened',
+					message: error.message,
 				});
+			} else {
+				const error_handler = CheckNonOperationalError(error, req, res);
+
+				if (!error_handler) {
+					res.status(error.statusCode).json({
+						status: 'error',
+						message: 'Algo errado aconteceu',
+					});
+				}
 			}
 		}
+	} else {
+		res.status(error.statusCode).render('error', {
+			title: `Algo errado aconteceu`,
+			message: error.isOperational ? error.message : '',
+		});
 	}
+
 	next();
 });
 

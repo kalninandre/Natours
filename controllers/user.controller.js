@@ -42,7 +42,7 @@ exports.deleteMe = async function (res, res, next) {
 
 exports.updateMePersonalData = async function (req, res, next) {
 	try {
-		const { name, photo, role } = req.body;
+		const { name, email, photo } = req.body;
 
 		if (req.body.password) {
 			throw new AppError('Não é possível alterar nenhum tipo de senha nesta rotina', 400);
@@ -54,7 +54,8 @@ exports.updateMePersonalData = async function (req, res, next) {
 		}
 
 		user.name = name;
-		user.photo = photo;
+		user.email = email;
+
 		await user.save({
 			validateModifiedOnly: true,
 		});
@@ -62,6 +63,7 @@ exports.updateMePersonalData = async function (req, res, next) {
 		const new_user_info = {
 			name: user.name,
 			photo: user.photo,
+			email: user.email,
 		};
 
 		res.status(200).json({
@@ -80,7 +82,7 @@ exports.updateMePassword = async function (req, res, next) {
 		const { old_password, new_password, confirm_new_password } = req.body;
 
 		if (!old_password || !new_password || !confirm_new_password) {
-			throw new AppError(`É necessário que todas as três senhas sejam informadas`, 400);
+			throw new AppError(`É necessário que todas as senhas sejam informadas`, 400);
 		}
 
 		const user = await User.findById(req.user._id);
@@ -94,12 +96,12 @@ exports.updateMePassword = async function (req, res, next) {
 		}
 
 		if (new_password != confirm_new_password) {
-			throw new AppError('A senha e confirmação de senha devem ser iguais', 400);
+			throw new AppError('A senha e a confirmação de senha devem ser iguais', 400);
 		}
 
 		const hashed_password = await bcrypt.hash(new_password.toString(), 10);
 		user.password = hashed_password;
-		user.lastPasswordUpdate = Date.now() / 1000;
+		user.lastPasswordUpdate = Date.now();
 
 		await user.save({
 			validateModifiedOnly: true,

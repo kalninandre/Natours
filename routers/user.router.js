@@ -17,8 +17,8 @@ router.route('/me/updatePassword').patch(updateMePassword);
 router.use(authorize('admin'));
 
 // Admininistração
-const { genericGetApiFeatures, genericGetOne, genericDeleteOne } = require('../utils/response-factory.js');
 const User = require('../models/user.schema.js');
+const { genericGetApiFeatures, genericGetOne, genericDeleteOne } = require('../utils/response-factory.js');
 
 router.route('/').get(genericGetApiFeatures(User));
 
