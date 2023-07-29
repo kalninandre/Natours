@@ -8,7 +8,15 @@ router.use(authenticate);
 
 // Tours
 const Tour = require('../models/tour.schema.js');
-const { getToursInRadius, getDistances, group_tours, get_monthly_tours } = require('../controllers/tour.controller.js');
+const {
+	getToursInRadius,
+	getDistances,
+	group_tours,
+	get_monthly_tours,
+	uploadTourImages,
+	resizeTourImages,
+} = require('../controllers/tour.controller.js');
+
 const {
 	genericGetApiFeatures,
 	genericGetOne,
@@ -28,7 +36,7 @@ router
 router
 	.route('/:id')
 	.get(genericGetOne(Tour, { path: 'reviews' }))
-	.patch(authorize('guide-lead'), genericUpdateOne(Tour))
+	.patch(authorize('guide-lead'), uploadTourImages, resizeTourImages, genericUpdateOne(Tour))
 	.delete(authorize('guide-lead'), genericDeleteOne(Tour));
 
 router.route('/group-tours').get(group_tours);

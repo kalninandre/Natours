@@ -1,6 +1,8 @@
 const User = require('../models/user.schema.js');
 const AppError = require('../utils/app-error.js');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const sharp = require('sharp');
 
 //#region Me
 exports.getMe = async function (req, res, next) {
@@ -42,7 +44,9 @@ exports.deleteMe = async function (res, res, next) {
 
 exports.updateMePersonalData = async function (req, res, next) {
 	try {
-		const { name, email, photo } = req.body;
+		const { name, email } = req.body;
+
+		console.log(req.file);
 
 		if (req.body.password) {
 			throw new AppError('Não é possível alterar nenhum tipo de senha nesta rotina', 400);
@@ -55,6 +59,7 @@ exports.updateMePersonalData = async function (req, res, next) {
 
 		user.name = name;
 		user.email = email;
+		user.photo = req.file.filename;
 
 		await user.save({
 			validateModifiedOnly: true,
@@ -62,8 +67,8 @@ exports.updateMePersonalData = async function (req, res, next) {
 
 		const new_user_info = {
 			name: user.name,
-			photo: user.photo,
 			email: user.email,
+			photo: user.photo,
 		};
 
 		res.status(200).json({
@@ -118,3 +123,49 @@ exports.updateMePassword = async function (req, res, next) {
 	}
 };
 //#endregion
+
+// Salva em disco
+// const multerStorage = multer.diskStorage({
+// 	destination: (req, file, cb) => {
+// 		cb(null, 'public/img/users');
+// 	},
+// 	filename: (req, file, cb) => {
+// 		const text = file.mimetype.split('/')[1];
+// 		cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+// 	},
+// });
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, next) => {
+	if (file.mimetype.startsWith('image')) {
+		next(null, true);
+	} else {
+		next(new AppError('Por favor, envie apenas imagens', 400), false);
+	}
+};
+
+const upload = multer({
+	storage: multerStorage,
+	fileFilter: multerFilter,
+});
+
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = async (req, res, next) => {
+	try {
+		if (!req.file) return next();
+
+		req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+		await sharp(req.file.buffer)
+			.resize(500, 500)
+			.toFormat('jpeg')
+			.jpeg({ quality: 90 })
+			.toFile(`public/img/users/${req.file.filename}`);
+
+		next();
+	} catch (error) {
+		next(error);
+	}
+};

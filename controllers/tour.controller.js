@@ -1,5 +1,7 @@
 const Tour = require('../models/tour.schema');
 const AppError = require('../utils/app-error');
+const multer = require('multer');
+const sharp = require('sharp');
 
 exports.get_monthly_tours = async (req, res, next) => {
 	try {
@@ -151,3 +153,57 @@ exports.getDistances = async (req, res, next) => {
 		next(error);
 	}
 };
+
+// #region Images
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, next) => {
+	if (file.mimetype.startsWith('image')) {
+		next(null, true);
+	} else {
+		next(new AppError('Por favor, envie apenas imagens', 400), false);
+	}
+};
+
+const upload = multer({
+	storage: multerStorage,
+	fileFilter: multerFilter,
+});
+
+exports.uploadTourImages = upload.fields([
+	{ name: 'imageCover', maxCount: 1 },
+	{ name: 'images', maxCount: 3 },
+]);
+
+exports.resizeTourImages = async (req, res, next) => {
+	try {
+		if (!req.files.imageCover || req.files.images) return next();
+
+		const imageCoverName = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+		await sharp(req.files.imageCover[0].buffer)
+			.resize(2000, 1333)
+			.toFormat('jpeg')
+			.jpeg({ quality: 90 })
+			.toFile(`public/img/tours/${imageCoverName}`);
+
+		req.body.imageCover = imageCoverName; // Para atualizar no banco de dados com o mesmo nome da pasta para pode exibir
+
+		for (let i = 0; i < req.files.images.length; i++) {
+			const file = req.files.images[i];
+			const imageName = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+
+			await sharp(file.buffer)
+				.resize(2000, 1333)
+				.toFormat('jpeg')
+				.jpeg({ quality: 90 })
+				.toFile(`public/img/tours/${imageName}`);
+
+			req.body.images.push(imageName); // Para atualizar no banco de dados com o mesmo nome da pasta para pode exibir
+		}
+
+		next();
+	} catch (error) {
+		next(error);
+	}
+};
+//#endregion

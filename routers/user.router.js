@@ -7,10 +7,17 @@ const { authenticate, authorize } = require('../controllers/auth.controller.js')
 router.use(authenticate);
 
 // Usuário público
-const { getMe, deleteMe, updateMePersonalData, updateMePassword } = require('../controllers/user.controller.js');
+const {
+	getMe,
+	deleteMe,
+	updateMePersonalData,
+	updateMePassword,
+	uploadUserPhoto,
+	resizeUserPhoto,
+} = require('../controllers/user.controller.js');
 
 router.route('/me').get(getMe).delete(deleteMe);
-router.route('/me/updatePersonalData').patch(updateMePersonalData);
+router.route('/me/updatePersonalData').patch(uploadUserPhoto, resizeUserPhoto, updateMePersonalData);
 router.route('/me/updatePassword').patch(updateMePassword);
 
 // Apenas Administradores na área de usuário
