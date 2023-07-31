@@ -20,3 +20,12 @@ Um aplicativo utilizando a arquitetura MVC junto à tecnologia Node.Js, que obje
   MAILTRAP_PORT=<MAILTRAP PORT>
   EMAIL_FROM=<THE EMAIL THAT WILL APPEAR ON THE 'FROM' FIELD>
 ```
+
+Imagens do projeto:
+![Tours-Section] ('dev-data\Image-1.jpg')
+
+![Tour-Section-1] ('dev-data\Image-2.jpg')
+
+![Tour-Section-2] ('dev-data\Image-3.jpg')
+
+![Account-Section] ('dev-data\Image-4.jpg')
