@@ -22,10 +22,11 @@ Um aplicativo utilizando a arquitetura MVC junto à tecnologia Node.Js, que obje
 ```
 
 Imagens do projeto:
-![Tours-Section]('images/Image-1.jpg')
 
-![Tour-Section-1]('images/Image-2.jpg')
+![Tours-Section](images/Image-1.jpg)
 
-![Tour-Section-2]('images/Image-3.jpg')
+![Tour-Section-1](images/Image-2.jpg)
 
-![Account-Section]('images/Image-4.jpg')
+![Tour-Section-2](images/Image-3.jpg)
+
+![Account-Section](images/Image-4.jpg)
