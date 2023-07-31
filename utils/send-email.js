@@ -1,28 +1,45 @@
+const pug = require('pug');
 const nodemailer = require('nodemailer');
-const AppError = require('./app-error');
+const html_to_text = require('html-to-text');
 
-const sendEmail = async function (options) {
-	try {
-		const transport = nodemailer.createTransport({
+module.exports = class Email {
+	constructor(email) {
+		this.to = email;
+		this.from = `André <${process.env.EMAIL_FROM}>`;
+	}
+
+	transport() {
+		return nodemailer.createTransport({
 			host: 'sandbox.smtp.mailtrap.io',
-			port: 2525,
+			port: process.env.MAILTRAP_PORT,
 			auth: {
 				user: process.env.MAILTRAP_USER,
 				pass: process.env.MAILTRAP_PASSWORD,
 			},
 		});
+	}
 
-		const email_model = {
-			from: 'André <abc@andre.io>',
-			to: options.to,
-			subject: options.subject,
-			text: options.message,
+	async send(template, model) {
+		const html = pug.renderFile(`${__dirname}/templates/${template}.pug`, { model });
+
+		// 2) Opções do email
+		const options = {
+			to: this.to,
+			from: this.from,
+			subject: model.title,
+			html,
+			text: html_to_text.htmlToText(html),
 		};
 
-		await transport.sendMail(email_model);
-	} catch (error) {
-		throw new AppError(error.message, 500);
+		// 3) Transporter
+		await this.transport().sendMail(options);
 	}
-};
 
-module.exports = sendEmail;
+	// async sendWelcome() {
+	// 	await this.send('welcome', 'Welcome to the Natours Family!');
+	// }
+
+	// async sendPasswordReset() {
+	// 	await this.send('passwordReset', 'Your password reset token (valid for only 10 minutes)');
+	// }
+};

@@ -6,6 +6,7 @@ const mongo_sanitize = require('express-mongo-sanitize');
 const xss_clean = require('xss-clean');
 const path = require('path');
 const cookie_parser = require('cookie-parser');
+const cors = require('cors');
 
 // Clases
 const AppError = require('./utils/app-error.js');
@@ -35,6 +36,17 @@ app.use(mongo_sanitize());
 
 // Valida para não passar nenhuma TAG HTML
 app.use(xss_clean());
+
+// Cors
+app.use(cors());
+
+// Access-Control-Allow-Origin
+// Colocar o nome de onde o Front-End está hospedado
+// app.use(cors({
+//   origin: 'https://www.natours.com'
+// }))
+
+app.options('*', cors()); // Todas as rotas
 
 // Faz o log de informações adicionais no caso de desenvolvimento
 const morgan = require('morgan');

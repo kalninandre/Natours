@@ -13,3 +13,10 @@ const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
 	console.log(`Listening on port ${port}...`);
 });
+
+process.on('SIGTERM', () => {
+	console.log('SIGTERM - Fechando a conexão do servidor...');
+	server.close(() => {
+		console.log('Conexão com o servidor fechada com sucesso');
+	});
+});

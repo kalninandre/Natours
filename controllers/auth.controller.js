@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/user.schema');
 const AppError = require('../utils/app-error.js');
 const sendEmail = require('../utils/send-email');
+const Email = require('../utils/send-email');
 
 // #region Registro e Login
 exports.signup = async function (req, res, next) {
@@ -34,6 +35,10 @@ exports.signup = async function (req, res, next) {
 		const user_response = await User.find({ _id: user.id }, { _id: 1, name: 1, email: 1 });
 
 		const token = createAndSendToken(res, user);
+
+		const title = 'Novo registro';
+		const url = `${req.protocol}://${req.get('host')}/me`;
+		new Email(user.email).send('welcome', { name: user.name, title, url });
 
 		res.status(201).json({
 			status_code: 201,
@@ -175,13 +180,9 @@ exports.forgotPassword = async function (req, res, next) {
 		user.passwordResetTokenExpiration = Date.now() + 1000 * 60 * 10; // 10 minutos
 		await user.save();
 
-		const reset_url = `${req.protocol}://${req.get('host')}/api/users/resetPassword/${random_string}`;
-		const message = `Se você solicitou uma redefinição de senha, por favor, utilize o link a seguir: ${reset_url}. Caso não tenha sido você, por favor, desconsiderar este e-mail`;
-		sendEmail({
-			to: user.email,
-			subject: 'Redefinição de senha',
-			message,
-		});
+		const title = 'Redefinição de senha';
+		const url = `${req.protocol}://${req.get('host')}/api/users/resetPassword/${random_string}`;
+		new Email(user.email).send('passwordReset', { title, name: user.name, url });
 
 		res.status(200).json({
 			status_code: 200,

@@ -59,7 +59,7 @@ exports.updateMePersonalData = async function (req, res, next) {
 
 		user.name = name;
 		user.email = email;
-		user.photo = req.file.filename;
+		user.photo = req.file ? req.file.filename : user.photo;
 
 		await user.save({
 			validateModifiedOnly: true,

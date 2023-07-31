@@ -2,7 +2,7 @@
 
 Um aplicativo utilizando a arquitetura MVC junto à tecnologia Node.Js, que objetiva ser um serviço de reserva de viagens, integrando vários estabalecimentos e companhias
 
-### Para utilização, é necessário um **.env** que conhtenha no mínimo, estas informações:
+### Para sua utilização, é necessário um **.env** que conhtenha no mínimo, estas informações:
 
 ```
   PORT=<Your port>
@@ -17,4 +17,6 @@ Um aplicativo utilizando a arquitetura MVC junto à tecnologia Node.Js, que obje
 
   MAILTRAP_USER=<MAILTRAP USER>
   MAILTRAP_PASSWORD=<MAILTRAP PASSWORD>
+  MAILTRAP_PORT=<MAILTRAP PORT>
+  EMAIL_FROM=<THE EMAIL THAT WILL APPEAR ON THE 'FROM' FIELD>
 ```
